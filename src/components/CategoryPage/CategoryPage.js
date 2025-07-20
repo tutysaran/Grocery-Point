@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Card, Col, Row, Spin, Rate, Button, message } from "antd";
 import { ShoppingOutlined } from "@ant-design/icons";
 import { useCart } from "../Cartpage/Cartcontext"; 
+import { useSearch } from "../Navbar/SearchContext"; // 👈 import search context
 
 const { Meta } = Card;
 
@@ -13,8 +14,10 @@ function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const { addToCart } = useCart(); 
+  const { searchTerm } = useSearch(); // 👈 get searchTerm
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get("https://projectapi-neon.vercel.app/api/products")
       .then((res) => {
@@ -28,37 +31,33 @@ function CategoryPage() {
       .catch(() => setLoading(false));
   }, [category]);
 
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return <Spin size="large" style={{ display: "block", margin: "100px auto" }} />;
   }
 
   return (
-    <div
-      style={{
-        padding: "30px",
-        backgroundColor: "#f9f9f9",
-        minHeight: "100vh",
-      }}
-    >
-      <h2
-        style={{
-          textAlign: "center",
-          color: "green",
-          fontWeight: "bold",
-          marginBottom: "30px",
-          fontSize: "30px",
-        }}
-      >
+    <div style={{ padding: "30px", backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
+      <h2 style={{
+        textAlign: "center",
+        color: "green",
+        fontWeight: "bold",
+        marginBottom: "30px",
+        fontSize: "30px",
+      }}>
         🛒 {category.toUpperCase()} PRODUCTS
       </h2>
 
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <p style={{ textAlign: "center", color: "red", fontSize: "18px" }}>
-          No products found in this category.
+          No products found for this search in the selected category.
         </p>
       ) : (
         <Row gutter={[24, 24]}>
-          {products.map((product, index) => (
+          {filteredProducts.map((product, index) => (
             <Col xs={24} sm={12} md={8} lg={6} key={product._id}>
               <Card
                 hoverable
@@ -93,19 +92,13 @@ function CategoryPage() {
                     </span>
                   }
                 />
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 12,
-                  }}
-                >
-                  <Rate
-                    disabled
-                    value={product.rating}
-                    style={{ fontSize: 14, color: "#faad14" }}
-                  />
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: 12,
+                }}>
+                  <Rate disabled value={product.rating} style={{ fontSize: 14, color: "#faad14" }} />
                   <span
                     style={{
                       fontWeight: "bold",
@@ -117,7 +110,6 @@ function CategoryPage() {
                   </span>
                 </div>
 
-                
                 <Button
                   block
                   type="primary"
